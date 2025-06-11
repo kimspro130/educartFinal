@@ -82,11 +82,11 @@ export function getNetworkFromPhone(phone: string): 'MTN' | 'AIRTEL' | 'AFRICELL
   return 'UNKNOWN';
 }
 
-// Initialize payment based on network
+// Initialize payment using Pesapal for all networks
 export async function initializeUgandaPayment(paymentData: UgandaPaymentData): Promise<PaymentResponse> {
   try {
     const formattedPhone = formatUgandaPhone(paymentData.phone_number);
-    
+
     if (!validateUgandaPhone(formattedPhone)) {
       return {
         status: 'error',
@@ -97,28 +97,19 @@ export async function initializeUgandaPayment(paymentData: UgandaPaymentData): P
     const detectedNetwork = getNetworkFromPhone(formattedPhone);
     const network = paymentData.network || detectedNetwork;
 
-    switch (network) {
-      case 'MTN':
-        return await initializeMTNPayment({
-          ...paymentData,
-          phone_number: formattedPhone,
-          network: 'MTN',
-        });
-      
-      case 'AIRTEL':
-      case 'AFRICELL':
-        return await initializePesapalPayment({
-          ...paymentData,
-          phone_number: formattedPhone,
-          network,
-        });
-      
-      default:
-        return {
-          status: 'error',
-          message: 'Unsupported network. Please use MTN, Airtel, or Africell.',
-        };
+    if (!['MTN', 'AIRTEL', 'AFRICELL'].includes(network)) {
+      return {
+        status: 'error',
+        message: 'Unsupported network. Please use MTN, Airtel, or Africell.',
+      };
     }
+
+    // Use Pesapal for all networks
+    return await initializePesapalPayment({
+      ...paymentData,
+      phone_number: formattedPhone,
+      network,
+    });
   } catch (error: any) {
     console.error('Uganda payment initialization error:', error);
     return {
@@ -128,28 +119,7 @@ export async function initializeUgandaPayment(paymentData: UgandaPaymentData): P
   }
 }
 
-// MTN MoMo Payment
-async function initializeMTNPayment(paymentData: UgandaPaymentData): Promise<PaymentResponse> {
-  try {
-    const response = await fetch('/api/payment/mtn-momo', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(paymentData),
-    });
-
-    const result = await response.json();
-    return result;
-  } catch (error: any) {
-    return {
-      status: 'error',
-      message: error.message || 'MTN MoMo payment failed',
-    };
-  }
-}
-
-// Pesapal Payment (for Airtel and Africell)
+// Pesapal Payment (for all networks)
 async function initializePesapalPayment(paymentData: UgandaPaymentData): Promise<PaymentResponse> {
   try {
     const response = await fetch('/api/payment/pesapal', {
@@ -170,10 +140,10 @@ async function initializePesapalPayment(paymentData: UgandaPaymentData): Promise
   }
 }
 
-// Verify payment
-export async function verifyUgandaPayment(transactionId: string, network: string): Promise<PaymentResponse> {
+// Verify payment (Pesapal for all networks)
+export async function verifyUgandaPayment(transactionId: string, network: string = 'PESAPAL'): Promise<PaymentResponse> {
   try {
-    const response = await fetch(`/api/payment/verify-uganda?transaction_id=${transactionId}&network=${network}`);
+    const response = await fetch(`/api/payment/pesapal?order_tracking_id=${transactionId}`);
     const result = await response.json();
     return result;
   } catch (error: any) {

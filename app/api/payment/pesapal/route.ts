@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
       id: orderTrackingId,
       currency: 'UGX',
       amount: amount,
-      description: `${service_type} - EDUCART Uganda`,
-      callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/payment/pesapal/callback`,
+      description: `${service_type} - EDUCART Uganda (${network} Mobile Money)`,
+      callback_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?transaction_id=${orderTrackingId}&network=${network}`,
       notification_id: process.env.PESAPAL_IPN_ID || '',
       billing_address: {
         email_address: email,
@@ -78,8 +78,8 @@ export async function POST(request: NextRequest) {
       const orderData = await orderResponse.json();
       
       return NextResponse.json({
-        status: 'pending',
-        message: `Payment request created. You will be redirected to ${network} payment page.`,
+        status: 'success',
+        message: `Payment request created successfully! You will be redirected to complete your ${network} Mobile Money payment.`,
         transaction_id: orderTrackingId,
         reference_id: orderData.order_tracking_id,
         payment_link: orderData.redirect_url,
@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
           service_type,
           network,
           order_tracking_id: orderData.order_tracking_id,
+          pesapal_merchant_reference: orderData.merchant_reference,
         },
       });
     } else {

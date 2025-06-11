@@ -78,15 +78,15 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
 
       const response = await initializeUgandaPayment(paymentData);
 
-      if (response.status === 'success' || response.status === 'pending') {
-        if (response.payment_link) {
-          toast.success('Redirecting to payment page...');
-          window.location.href = response.payment_link;
-        } else {
-          toast.success(response.message);
-          // For MTN MoMo, redirect to success page with transaction ID
-          window.location.href = `/payment/success?transaction_id=${response.transaction_id}&network=${selectedNetwork}`;
-        }
+      if (response.status === 'success' && response.payment_link) {
+        toast.success(`Redirecting to ${selectedNetwork} Mobile Money payment...`);
+        // Redirect to Pesapal payment page
+        window.location.href = response.payment_link;
+        onSuccess?.(response.data);
+      } else if (response.status === 'success') {
+        toast.success(response.message);
+        // Direct success without redirect
+        window.location.href = `/payment/success?transaction_id=${response.transaction_id}&network=${selectedNetwork}`;
         onSuccess?.(response.data);
       } else {
         toast.error(response.message || 'Payment initialization failed');
@@ -223,7 +223,7 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
 
         {/* Security Notice */}
         <div className="text-center text-sm text-blue-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
-          🔒 Your payment is secured by Uganda's trusted mobile money providers
+          🔒 Your payment is secured by Pesapal - Uganda's trusted payment gateway
         </div>
       </CardContent>
     </Card>
