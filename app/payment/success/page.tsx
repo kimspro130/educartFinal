@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Loader2, XCircle, Home, Receipt } from 'lucide-react';
-import { verifyPayment, formatCurrency } from '@/lib/payment-service';
+import { verifyUgandaPayment, formatUGX } from '@/lib/uganda-payment-service';
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
@@ -15,6 +15,7 @@ function PaymentSuccessContent() {
 
   const txRef = searchParams.get('tx_ref');
   const transactionId = searchParams.get('transaction_id');
+  const network = searchParams.get('network') || 'MTN';
 
   useEffect(() => {
     const verifyTransaction = async () => {
@@ -24,7 +25,7 @@ function PaymentSuccessContent() {
       }
 
       try {
-        const result = await verifyPayment(transactionId);
+        const result = await verifyUgandaPayment(transactionId, network);
         
         if (result.status === 'success') {
           setVerificationStatus('success');

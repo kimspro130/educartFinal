@@ -7,7 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Loader2, Smartphone, CreditCard } from 'lucide-react';
-import { initializeMobileMoneyPayment, formatCurrency, getSupportedNetworks } from '@/lib/payment-service';
+import {
+  initializeUgandaPayment,
+  formatUGX,
+  getUgandaNetworks,
+  validateUgandaPhone,
+  getNetworkFromPhone,
+  generateTxRef
+} from '@/lib/uganda-payment-service';
 import { toast } from 'sonner';
 
 interface MobileMoneyFormProps {
@@ -26,7 +33,7 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
     phone: '',
   });
 
-  const networks = getSupportedNetworks();
+  const networks = getUgandaNetworks();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -44,8 +51,8 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
       toast.error('Please enter a valid email address');
       return false;
     }
-    if (!formData.phone.trim() || formData.phone.length < 10) {
-      toast.error('Please enter a valid phone number');
+    if (!validateUgandaPhone(formData.phone)) {
+      toast.error('Please enter a valid Uganda phone number (e.g., 077XXXXXXX, 075XXXXXXX, 079XXXXXXX)');
       return false;
     }
     return true;
@@ -53,25 +60,33 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
-    
-    try {
-      const response = await initializeMobileMoneyPayment(
-        amount,
-        formData.phone,
-        formData.email,
-        formData.name,
-        selectedNetwork,
-        serviceType
-      );
 
-      if (response.status === 'success' && response.payment_link) {
-        toast.success('Redirecting to payment...');
-        // Redirect to Flutterwave payment page
-        window.location.href = response.payment_link;
+    try {
+      const paymentData = {
+        amount,
+        phone_number: formData.phone,
+        email: formData.email,
+        name: formData.name,
+        network: selectedNetwork,
+        service_type: serviceType,
+        external_id: generateTxRef(),
+      };
+
+      const response = await initializeUgandaPayment(paymentData);
+
+      if (response.status === 'success' || response.status === 'pending') {
+        if (response.payment_link) {
+          toast.success('Redirecting to payment page...');
+          window.location.href = response.payment_link;
+        } else {
+          toast.success(response.message);
+          // For MTN MoMo, redirect to success page with transaction ID
+          window.location.href = `/payment/success?transaction_id=${response.transaction_id}&network=${selectedNetwork}`;
+        }
         onSuccess?.(response.data);
       } else {
         toast.error(response.message || 'Payment initialization failed');
@@ -96,7 +111,7 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
           Mobile Money Payment
         </CardTitle>
         <p className="text-blue-800 dark:text-amber-200">
-          Pay {formatCurrency(amount)} for {serviceType}
+          Pay {formatUGX(amount)} for {serviceType}
         </p>
       </CardHeader>
 
@@ -199,7 +214,7 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
               </>
             ) : (
               <>
-                Pay {formatCurrency(amount)}
+                Pay {formatUGX(amount)}
                 <Smartphone className="ml-2 h-4 w-4" />
               </>
             )}
@@ -208,7 +223,7 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
 
         {/* Security Notice */}
         <div className="text-center text-sm text-blue-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
-          🔒 Your payment is secured by Flutterwave
+          🔒 Your payment is secured by Uganda's trusted mobile money providers
         </div>
       </CardContent>
     </Card>
