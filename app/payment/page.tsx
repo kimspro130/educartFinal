@@ -165,8 +165,21 @@ export default function PaymentPage() {
                   <p className="text-xs text-blue-600 dark:text-amber-300 mt-1">075, 070, 074</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border shadow-sm">
-                    <span className="text-white font-bold text-lg">A</span>
+                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 border shadow-sm overflow-hidden">
+                    <img
+                      src="https://images.seeklogo.com/logo-png/40/1/africell-logo-png_seeklogo-402658.png"
+                      alt="Africell Money logo"
+                      className="w-14 h-14 object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.style.backgroundColor = '#0066CC';
+                          parent.innerHTML = '<span class="text-white font-bold text-lg">AFRICELL</span>';
+                        }
+                      }}
+                    />
                   </div>
                   <h4 className="font-semibold text-blue-900 dark:text-amber-400 mb-2">Africell Money</h4>
                   <p className="text-blue-800 dark:text-amber-200 text-sm">Pay with Africell Money</p>

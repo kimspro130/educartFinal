@@ -179,7 +179,7 @@ export function getUgandaNetworks() {
       description: 'Pay with Africell Money',
       prefixes: ['079'],
       color: '#0066CC',
-      logo: '/images/africell-logo.png',
+      logo: 'https://images.seeklogo.com/logo-png/40/1/africell-logo-png_seeklogo-402658.png',
     },
   ];
 }
