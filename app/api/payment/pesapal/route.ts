@@ -10,11 +10,9 @@ export async function POST(request: NextRequest) {
     // Generate unique order tracking ID
     const orderTrackingId = `EDUCART_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    // Pesapal Configuration
+    // Pesapal Configuration - Use production environment
     const config = {
-      baseUrl: process.env.NODE_ENV === 'production'
-        ? 'https://pay.pesapal.com/v3'
-        : 'https://cybqa.pesapal.com/pesapalv3',
+      baseUrl: 'https://pay.pesapal.com/v3',
       consumerKey: process.env.PESAPAL_CONSUMER_KEY || 'your-consumer-key',
       consumerSecret: process.env.PESAPAL_CONSUMER_SECRET || 'your-consumer-secret',
     };
@@ -25,6 +23,12 @@ export async function POST(request: NextRequest) {
       consumer_secret: config.consumerSecret,
     };
 
+    console.log('Requesting Pesapal token with:', {
+      baseUrl: config.baseUrl,
+      consumerKey: config.consumerKey ? 'Present' : 'Missing',
+      consumerSecret: config.consumerSecret ? 'Present' : 'Missing',
+    });
+
     const tokenResponse = await fetch(`${config.baseUrl}/api/Auth/RequestToken`, {
       method: 'POST',
       headers: {
@@ -34,11 +38,21 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(tokenPayload),
     });
 
+    console.log('Token response status:', tokenResponse.status);
+
     if (!tokenResponse.ok) {
-      throw new Error('Failed to get Pesapal access token');
+      const errorText = await tokenResponse.text();
+      console.error('Token request failed:', errorText);
+      throw new Error(`Failed to get Pesapal access token: ${errorText}`);
     }
 
     const tokenData = await tokenResponse.json();
+    console.log('Token response:', tokenData);
+
+    if (!tokenData.token) {
+      throw new Error('No token received from Pesapal');
+    }
+
     const accessToken = tokenData.token;
 
     // Step 2: Submit order request
@@ -64,6 +78,8 @@ export async function POST(request: NextRequest) {
       },
     };
 
+    console.log('Submitting order with payload:', JSON.stringify(orderPayload, null, 2));
+
     const orderResponse = await fetch(`${config.baseUrl}/api/Transactions/SubmitOrderRequest`, {
       method: 'POST',
       headers: {
@@ -74,9 +90,12 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(orderPayload),
     });
 
+    console.log('Order response status:', orderResponse.status);
+
     if (orderResponse.ok) {
       const orderData = await orderResponse.json();
-      
+      console.log('Order response data:', orderData);
+
       return NextResponse.json({
         status: 'success',
         message: `Payment request created successfully! You will be redirected to complete your ${network} Mobile Money payment.`,
@@ -95,10 +114,10 @@ export async function POST(request: NextRequest) {
     } else {
       const errorData = await orderResponse.text();
       console.error('Pesapal order error:', errorData);
-      
+
       return NextResponse.json({
         status: 'error',
-        message: `Failed to initiate ${network} payment. Please try again.`,
+        message: `Failed to initiate ${network} payment. Error: ${errorData}`,
       }, { status: 400 });
     }
 
