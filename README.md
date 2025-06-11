@@ -4,7 +4,7 @@ A modern educational platform for Uganda, offering comprehensive tutoring servic
 
 ## 🚀 Quick Deploy
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/educart-uganda)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kimspro130/educartFinal)
 
 ## ✨ Features
 
