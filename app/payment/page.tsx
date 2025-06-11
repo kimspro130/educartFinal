@@ -124,25 +124,53 @@ export default function PaymentPage() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Smartphone className="h-8 w-8 text-white" />
+                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 border shadow-sm overflow-hidden">
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/commons/9/93/New-mtn-logo.jpg"
+                      alt="MTN Mobile Money logo"
+                      className="w-14 h-14 object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.style.backgroundColor = '#FFCC00';
+                          parent.innerHTML = '<span class="text-black font-bold text-xl">MTN</span>';
+                        }
+                      }}
+                    />
                   </div>
                   <h4 className="font-semibold text-blue-900 dark:text-amber-400 mb-2">MTN Mobile Money</h4>
                   <p className="text-blue-800 dark:text-amber-200 text-sm">Pay with MTN MoMo</p>
+                  <p className="text-xs text-blue-600 dark:text-amber-300 mt-1">077, 078, 076</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <CreditCard className="h-8 w-8 text-white" />
+                  <div className="w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border shadow-sm overflow-hidden">
+                    <img
+                      src="https://s3-ap-southeast-1.amazonaws.com/bsy/iportal/images/airtel-logo-white-text-vertical.jpg"
+                      alt="Airtel Money logo"
+                      className="w-12 h-14 object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = '<span class="text-white font-bold text-lg">AIRTEL</span>';
+                        }
+                      }}
+                    />
                   </div>
                   <h4 className="font-semibold text-blue-900 dark:text-amber-400 mb-2">Airtel Money</h4>
                   <p className="text-blue-800 dark:text-amber-200 text-sm">Pay with Airtel Money</p>
+                  <p className="text-xs text-blue-600 dark:text-amber-300 mt-1">075, 070, 074</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Banknote className="h-8 w-8 text-white" />
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border shadow-sm">
+                    <span className="text-white font-bold text-lg">A</span>
                   </div>
                   <h4 className="font-semibold text-blue-900 dark:text-amber-400 mb-2">Africell Money</h4>
                   <p className="text-blue-800 dark:text-amber-200 text-sm">Pay with Africell Money</p>
+                  <p className="text-xs text-blue-600 dark:text-amber-300 mt-1">079</p>
                 </div>
               </div>
             </CardContent>

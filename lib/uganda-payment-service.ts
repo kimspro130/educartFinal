@@ -163,7 +163,7 @@ export function getUgandaNetworks() {
       description: 'Pay with MTN MoMo',
       prefixes: ['077', '078', '076'],
       color: '#FFCC00',
-      logo: '/images/mtn-logo.png',
+      logo: 'https://upload.wikimedia.org/wikipedia/commons/9/93/New-mtn-logo.jpg',
     },
     {
       code: 'AIRTEL',
@@ -171,7 +171,7 @@ export function getUgandaNetworks() {
       description: 'Pay with Airtel Money',
       prefixes: ['075', '070', '074'],
       color: '#FF0000',
-      logo: '/images/airtel-logo.png',
+      logo: 'https://s3-ap-southeast-1.amazonaws.com/bsy/iportal/images/airtel-logo-white-text-vertical.jpg',
     },
     {
       code: 'AFRICELL',

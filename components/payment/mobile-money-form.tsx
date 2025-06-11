@@ -138,12 +138,43 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
                     htmlFor={network.code}
                     className="flex items-center space-x-3 cursor-pointer flex-1 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-blue-500 rounded-full flex items-center justify-center">
-                      <CreditCard className="h-4 w-4 text-white" />
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden bg-white border">
+                      {network.logo ? (
+                        <img
+                          src={network.logo}
+                          alt={`${network.name} logo`}
+                          className="w-10 h-10 object-contain"
+                          onError={(e) => {
+                            // Fallback to colored box with letter if image fails
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.style.backgroundColor = network.color;
+                              parent.innerHTML = `<span class="text-white font-bold text-lg">${network.code.charAt(0)}</span>`;
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="w-full h-full flex items-center justify-center text-white font-bold text-lg"
+                          style={{ backgroundColor: network.color }}
+                        >
+                          {network.code.charAt(0)}
+                        </div>
+                      )}
                     </div>
-                    <span className="text-blue-800 dark:text-amber-200 font-medium">
-                      {network.name}
-                    </span>
+                    <div className="flex-1">
+                      <div className="text-blue-800 dark:text-amber-200 font-medium">
+                        {network.name}
+                      </div>
+                      <div className="text-sm text-blue-600 dark:text-amber-300">
+                        {network.description}
+                      </div>
+                      <div className="text-xs text-blue-500 dark:text-amber-400 mt-1">
+                        {network.prefixes.join(', ')}
+                      </div>
+                    </div>
                   </Label>
                 </div>
               ))}
