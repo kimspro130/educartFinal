@@ -1,4 +1,5 @@
-// Client-side payment service (no server dependencies)
+// EDUCART Uganda - Pesapal Payment Service
+// No external dependencies - using Pesapal API directly
 
 export interface PaymentData {
   amount: number;
@@ -22,22 +23,43 @@ export interface PaymentResponse {
 
 // Generate unique transaction reference
 export function generateTxRef(): string {
-  return `EDUCART_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return `EDUCART_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
-// Initialize payment via API route
+// Initialize payment with Pesapal
 export async function initializePayment(paymentData: PaymentData): Promise<PaymentResponse> {
   try {
-    const response = await fetch('/api/payment/initialize', {
+    // Call our Pesapal API endpoint
+    const response = await fetch('/api/payment/pesapal', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(paymentData),
+      body: JSON.stringify({
+        amount: paymentData.amount,
+        phone_number: paymentData.phone_number,
+        email: paymentData.email,
+        name: paymentData.name,
+        service_type: paymentData.service_type || 'tutoring',
+        network: paymentData.network,
+      }),
     });
 
     const result = await response.json();
-    return result;
+
+    if (result.status === 'success') {
+      return {
+        status: 'success',
+        message: result.message,
+        data: result.data,
+        payment_link: result.payment_link,
+      };
+    } else {
+      return {
+        status: 'error',
+        message: result.message || 'Failed to initialize payment',
+      };
+    }
   } catch (error: any) {
     console.error('Payment initialization error:', error);
     return {
@@ -47,12 +69,32 @@ export async function initializePayment(paymentData: PaymentData): Promise<Payme
   }
 }
 
-// Verify payment via API route
+// Verify payment with Pesapal
 export async function verifyPayment(transactionId: string): Promise<PaymentResponse> {
   try {
-    const response = await fetch(`/api/payment/verify?transaction_id=${transactionId}`);
+    // Call Pesapal verification endpoint
+    const response = await fetch(`/api/payment/pesapal/verify?transaction_id=${transactionId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
     const result = await response.json();
-    return result;
+
+    if (result.status === 'success') {
+      return {
+        status: 'success',
+        message: 'Payment verified successfully',
+        data: result.data,
+      };
+    } else {
+      return {
+        status: 'error',
+        message: 'Payment verification failed',
+        data: result.data,
+      };
+    }
   } catch (error: any) {
     console.error('Payment verification error:', error);
     return {
@@ -89,12 +131,30 @@ export async function initializeMobileMoneyPayment(
   return await initializePayment(paymentData);
 }
 
-// Get supported networks
+// Get supported networks with official logos
 export function getSupportedNetworks() {
   return [
-    { code: 'MTN', name: 'MTN Mobile Money', logo: '/images/mtn-logo.png' },
-    { code: 'AIRTEL', name: 'Airtel Money', logo: '/images/airtel-logo.png' },
-    { code: 'AFRICELL', name: 'Africell Money', logo: '/images/africell-logo.png' },
+    {
+      code: 'MTN',
+      name: 'MTN Mobile Money',
+      logo: 'https://upload.wikimedia.org/wikipedia/commons/9/93/New-mtn-logo.jpg',
+      prefixes: ['077', '078', '076'],
+      color: '#FFCC00'
+    },
+    {
+      code: 'AIRTEL',
+      name: 'Airtel Money',
+      logo: 'https://s3-ap-southeast-1.amazonaws.com/bsy/iportal/images/airtel-logo-white-text-vertical.jpg',
+      prefixes: ['075', '070', '074'],
+      color: '#DC2626'
+    },
+    {
+      code: 'AFRICELL',
+      name: 'Africell Money',
+      logo: 'https://images.seeklogo.com/logo-png/40/1/africell-logo-png_seeklogo-402658.png',
+      prefixes: ['079'],
+      color: '#0066CC'
+    },
   ];
 }
 

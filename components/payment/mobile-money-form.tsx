@@ -7,14 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Loader2, Smartphone, CreditCard } from 'lucide-react';
-import {
-  initializeUgandaPayment,
-  formatUGX,
-  getUgandaNetworks,
-  validateUgandaPhone,
-  getNetworkFromPhone,
-  generateTxRef
-} from '@/lib/uganda-payment-service';
+import { initializeMobileMoneyPayment, formatCurrency, getSupportedNetworks } from '@/lib/payment-service';
 import { toast } from 'sonner';
 
 interface MobileMoneyFormProps {
@@ -33,7 +26,7 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
     phone: '',
   });
 
-  const networks = getUgandaNetworks();
+  const networks = getSupportedNetworks();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -51,8 +44,8 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
       toast.error('Please enter a valid email address');
       return false;
     }
-    if (!validateUgandaPhone(formData.phone)) {
-      toast.error('Please enter a valid Uganda phone number (e.g., 077XXXXXXX, 075XXXXXXX, 079XXXXXXX)');
+    if (!formData.phone.trim() || formData.phone.length < 10) {
+      toast.error('Please enter a valid phone number');
       return false;
     }
     return true;
@@ -60,33 +53,25 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (!validateForm()) return;
 
     setLoading(true);
-
+    
     try {
-      const paymentData = {
+      const response = await initializeMobileMoneyPayment(
         amount,
-        phone_number: formData.phone,
-        email: formData.email,
-        name: formData.name,
-        network: selectedNetwork,
-        service_type: serviceType,
-        external_id: generateTxRef(),
-      };
-
-      const response = await initializeUgandaPayment(paymentData);
+        formData.phone,
+        formData.email,
+        formData.name,
+        selectedNetwork,
+        serviceType
+      );
 
       if (response.status === 'success' && response.payment_link) {
-        toast.success(`Redirecting to ${selectedNetwork} Mobile Money payment...`);
-        // Redirect to Pesapal payment page
+        toast.success('Redirecting to payment...');
+        // Redirect to Flutterwave payment page
         window.location.href = response.payment_link;
-        onSuccess?.(response.data);
-      } else if (response.status === 'success') {
-        toast.success(response.message);
-        // Direct success without redirect
-        window.location.href = `/payment/success?transaction_id=${response.transaction_id}&network=${selectedNetwork}`;
         onSuccess?.(response.data);
       } else {
         toast.error(response.message || 'Payment initialization failed');
@@ -111,7 +96,7 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
           Mobile Money Payment
         </CardTitle>
         <p className="text-blue-800 dark:text-amber-200">
-          Pay {formatUGX(amount)} for {serviceType}
+          Pay {formatCurrency(amount)} for {serviceType}
         </p>
       </CardHeader>
 
@@ -138,43 +123,12 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
                     htmlFor={network.code}
                     className="flex items-center space-x-3 cursor-pointer flex-1 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
                   >
-                    <div className="w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden bg-white border">
-                      {network.logo ? (
-                        <img
-                          src={network.logo}
-                          alt={`${network.name} logo`}
-                          className="w-10 h-10 object-contain"
-                          onError={(e) => {
-                            // Fallback to colored box with letter if image fails
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const parent = target.parentElement;
-                            if (parent) {
-                              parent.style.backgroundColor = network.color;
-                              parent.innerHTML = `<span class="text-white font-bold text-lg">${network.code.charAt(0)}</span>`;
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div
-                          className="w-full h-full flex items-center justify-center text-white font-bold text-lg"
-                          style={{ backgroundColor: network.color }}
-                        >
-                          {network.code.charAt(0)}
-                        </div>
-                      )}
+                    <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-blue-500 rounded-full flex items-center justify-center">
+                      <CreditCard className="h-4 w-4 text-white" />
                     </div>
-                    <div className="flex-1">
-                      <div className="text-blue-800 dark:text-amber-200 font-medium">
-                        {network.name}
-                      </div>
-                      <div className="text-sm text-blue-600 dark:text-amber-300">
-                        {network.description}
-                      </div>
-                      <div className="text-xs text-blue-500 dark:text-amber-400 mt-1">
-                        {network.prefixes.join(', ')}
-                      </div>
-                    </div>
+                    <span className="text-blue-800 dark:text-amber-200 font-medium">
+                      {network.name}
+                    </span>
                   </Label>
                 </div>
               ))}
@@ -245,7 +199,7 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
               </>
             ) : (
               <>
-                Pay {formatUGX(amount)}
+                Pay {formatCurrency(amount)}
                 <Smartphone className="ml-2 h-4 w-4" />
               </>
             )}
@@ -254,7 +208,7 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
 
         {/* Security Notice */}
         <div className="text-center text-sm text-blue-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
-          🔒 Your payment is secured by Pesapal - Uganda's trusted payment gateway
+          🔒 Your payment is secured by Flutterwave
         </div>
       </CardContent>
     </Card>

@@ -1,21 +1,20 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Loader2, XCircle, Home, Receipt } from 'lucide-react';
-import { verifyUgandaPayment, formatUGX } from '@/lib/uganda-payment-service';
+import { verifyPayment, formatCurrency } from '@/lib/payment-service';
 
-function PaymentSuccessContent() {
+export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'failed'>('loading');
   const [paymentData, setPaymentData] = useState<any>(null);
-
+  
   const txRef = searchParams.get('tx_ref');
   const transactionId = searchParams.get('transaction_id');
-  const network = searchParams.get('network') || 'MTN';
 
   useEffect(() => {
     const verifyTransaction = async () => {
@@ -25,7 +24,7 @@ function PaymentSuccessContent() {
       }
 
       try {
-        const result = await verifyUgandaPayment(transactionId, network);
+        const result = await verifyPayment(transactionId);
         
         if (result.status === 'success') {
           setVerificationStatus('success');
@@ -209,27 +208,5 @@ function PaymentSuccessContent() {
         </Card>
       </div>
     </div>
-  );
-}
-
-export default function PaymentSuccessPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center pt-16">
-        <Card className="w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-3xl border-0">
-          <CardContent className="p-8 text-center">
-            <Loader2 className="h-16 w-16 text-amber-500 animate-spin mx-auto mb-4" />
-            <h2 className="text-2xl font-semibold text-blue-900 dark:text-amber-400 mb-2">
-              Loading...
-            </h2>
-            <p className="text-blue-800 dark:text-amber-200">
-              Please wait while we load your payment details...
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    }>
-      <PaymentSuccessContent />
-    </Suspense>
   );
 }
