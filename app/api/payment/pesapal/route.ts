@@ -107,22 +107,45 @@ export async function POST(request: NextRequest) {
     if (orderResponse.ok) {
       const orderData = await orderResponse.json();
       console.log('Order response data:', orderData);
-      
-      return NextResponse.json({
-        status: 'success',
-        message: `Payment request created successfully! You will be redirected to complete your ${network} Mobile Money payment.`,
-        transaction_id: orderTrackingId,
-        reference_id: orderData.order_tracking_id,
-        payment_link: orderData.redirect_url,
-        data: {
-          amount,
-          phone_number,
-          service_type,
-          network,
-          order_tracking_id: orderData.order_tracking_id,
-          pesapal_merchant_reference: orderData.merchant_reference,
-        },
-      });
+
+      // Check if we have a redirect URL
+      const redirectUrl = orderData.redirect_url || orderData.payment_url || orderData.checkout_url;
+
+      if (redirectUrl) {
+        return NextResponse.json({
+          status: 'success',
+          message: `Payment request created successfully! You will be redirected to complete your ${network} Mobile Money payment.`,
+          transaction_id: orderTrackingId,
+          reference_id: orderData.order_tracking_id,
+          payment_link: redirectUrl,
+          data: {
+            amount,
+            phone_number,
+            service_type,
+            network,
+            order_tracking_id: orderData.order_tracking_id,
+            pesapal_merchant_reference: orderData.merchant_reference,
+          },
+        });
+      } else {
+        // Success but no redirect URL - might need manual processing
+        console.log('No redirect URL in response, full response:', orderData);
+        return NextResponse.json({
+          status: 'success',
+          message: `Payment request created successfully! Order ID: ${orderData.order_tracking_id}. Please check your mobile money for payment prompt.`,
+          transaction_id: orderTrackingId,
+          reference_id: orderData.order_tracking_id,
+          data: {
+            amount,
+            phone_number,
+            service_type,
+            network,
+            order_tracking_id: orderData.order_tracking_id,
+            pesapal_merchant_reference: orderData.merchant_reference,
+            full_response: orderData,
+          },
+        });
+      }
     } else {
       const errorData = await orderResponse.text();
       console.error('Pesapal order error:', errorData);

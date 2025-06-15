@@ -68,11 +68,17 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
         serviceType
       );
 
-      if (response.status === 'success' && response.payment_link) {
-        toast.success('Redirecting to payment...');
-        // Redirect to Pesapal payment page
-        window.location.href = response.payment_link;
-        onSuccess?.(response.data);
+      if (response.status === 'success') {
+        if (response.payment_link) {
+          toast.success('Redirecting to payment...');
+          // Redirect to Pesapal payment page
+          window.location.href = response.payment_link;
+          onSuccess?.(response.data);
+        } else {
+          // Success but no payment link - show success message
+          toast.success(response.message || 'Payment request created successfully!');
+          onSuccess?.(response.data);
+        }
       } else {
         toast.error(response.message || 'Payment initialization failed');
         onError?.(response.message || 'Payment failed');
