@@ -70,7 +70,7 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
 
       if (response.status === 'success' && response.payment_link) {
         toast.success('Redirecting to payment...');
-        // Redirect to Flutterwave payment page
+        // Redirect to Pesapal payment page
         window.location.href = response.payment_link;
         onSuccess?.(response.data);
       } else {
@@ -208,7 +208,7 @@ export function MobileMoneyForm({ amount, serviceType, onSuccess, onError }: Mob
 
         {/* Security Notice */}
         <div className="text-center text-sm text-blue-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
-          🔒 Your payment is secured by Flutterwave
+          🔒 Your payment is secured by Pesapal
         </div>
       </CardContent>
     </Card>
